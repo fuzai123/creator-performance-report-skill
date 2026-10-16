@@ -1,16 +1,17 @@
 ---
 name: creator-performance-report
-description: Build and maintain a source-backed creator affiliate and content-performance report, interactive website, and guarded recurring refresh from user-authorized pages without downloading source documents.
+description: Build and maintain an order-detail-audited creator affiliate and content-performance report, interactive website, and guarded recurring refresh from user-authorized pages without downloading source documents.
 ---
 
 # Creator performance reporting
 
-Use this skill for a contracted-creator scorecard that combines affiliate sales,
-referral traffic, content views, monthly fees, and a management-ready report or
-interactive site. Read [requirements](references/requirements.md) for the full
-deliverable checklist and [data contract](references/data-contract.md) before
-calculating metrics. Adapt the period, brand, roster, sources, and publisher to
-the user's organization; none are bundled with this skill.
+Use this skill for a contracted-creator scorecard that combines order-level
+affiliate value, commissionable volume, referral traffic, content views,
+monthly fees, and a management-ready report or interactive site. Read
+[requirements](references/requirements.md) for the full deliverable checklist
+and [data contract](references/data-contract.md) before calculating metrics.
+Adapt the period, brand, roster, sources, and publisher to the user's
+organization; none are bundled with this skill.
 
 ## Non-negotiable boundaries
 
@@ -37,11 +38,15 @@ the user's organization; none are bundled with this skill.
    access, output folder, and publication audience only when not already known.
    Do not infer account matches from similar names. Record new signings and
    renewals separately; an effective date may be a renewal, not a start date.
-2. Inspect the affiliate platform for creator-month sales, referrals, and
-   orders. Inspect the content evaluation sheet for creator-month content
-   views, update markers, and any source notes. Inspect the contract sheet for
-   fees, effective dates, and channel names. Read the visible page/range
-   directly; never invoke a document download/export control.
+2. In the affiliate platform, open every order-detail view for each
+   creator-month. Read and separately sum `Order Amount` and `Commissionable
+   Volume` regardless of commission status. Group by the displayed order date,
+   reconcile month-boundary records with adjacent filters, and retain only
+   non-sensitive audit counts and totals. Read referrals and order counts from
+   the governing affiliate view. Inspect the content evaluation sheet for
+   creator-month content views, update markers, and source notes, and the
+   contract sheet for fees, effective dates, and channel names. Read visible
+   pages/ranges directly; never invoke a document download/export control.
 3. Build a private local normalized dataset following the data contract.
    Preserve evidence references and source timestamps privately. If two
    sources disagree on affiliate metrics, keep the designated affiliate
@@ -49,18 +54,24 @@ the user's organization; none are bundled with this skill.
 
 ## Calculation and reporting
 
-- Monthly sales-to-fee multiple = affiliate sales / listed monthly fee.
+- Monthly return multiple = audited Order Amount / listed monthly fee.
   Target met only when the unrounded multiple is **strictly greater than 2.5**.
   Use green for met and red for unmet; retain text labels and accessible names.
   Unless actual historical fees are supplied, the listed fee is a comparison
   benchmark for every displayed month, not proof of historical spend.
+- Present audited `Order Amount` and `Commissionable Volume` as separate
+  measures. Commissionable Volume is not the target numerator. Do not replace
+  the order-detail sums with a dashboard summary, commission amount, or payout.
 - Referrals / Monthly Content Views = verified affiliate referrals / recorded
   content views. Recompute it; do not copy a spreadsheet formula cache. For
   zero views, show N/A. For missing or stale views, show an explicit unavailable
   state, never zero. Do not imply this directional ratio is a tracked video CTR.
-- Reconcile totals from creator-month rows. Sort the management view so
-  shortfalls and next actions are easy to find; retain filters and drilldown.
-  Show names with channel names in parentheses where available.
+- Reconcile every creator-month against the visible order list: unique order
+  count must match the audited count, duplicate order IDs and detail/list
+  amount mismatches must be zero, the detail Order Amount sum must equal the
+  list sum, and month-boundary handling must be documented as complete. Sort
+  the management view so shortfalls and next actions are easy to find; retain
+  filters and drilldown. Show names with channel names in parentheses.
 - Produce an English narrative report with monthly breakdown, one consolidated
   cross-creator chart, source/method notes, and a high-resolution PDF when
   requested. Recreate charts from data rather than attaching dashboard
@@ -69,15 +80,17 @@ the user's organization; none are bundled with this skill.
 - For an interactive website, provide a creator-by-month matrix with metric
   switching, month and creator filters, sorting, drilldown, and accessible
   missing-value and target states. Apply the user's provided brand guidelines.
-  The first view should be useful for managing creators, not a landing page.
+  Include Order Amount, Commissionable Volume, Order Amount/fee, referrals,
+  content views, referrals/views, and orders. The first view should be useful
+  for managing creators, not a landing page.
 
 ## Verification and recurring updates
 
-Run `python scripts/validate_data.py <private-dataset.json>` for structural and
-metric checks. Verify visible totals, at least one rate, creator mapping,
-month coverage, zero-vs-missing behavior, responsive layout, and the published
-page after deploying. Keep the public dataset and access scope no broader than
-the user authorized.
+Run `python scripts/validate_data.py <private-dataset.json>` for structural,
+order-audit, and metric checks. Verify both monetary totals, at least one rate,
+creator mapping, month coverage, zero-vs-missing behavior, responsive layout,
+and the published page after deploying. Keep the public dataset and access
+scope no broader than the user authorized.
 
 For requested cadences, track each source independently: an affiliate/site
 check may be weekly while content-view checks may run every other Monday.

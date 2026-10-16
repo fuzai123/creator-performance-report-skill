@@ -32,13 +32,13 @@ def nonnegative_int(value, label, errors):
     return value
 
 
-def check_derived(row, label, sales, fee, threshold, referrals, views, errors):
-    if sales is not None and fee is not None and threshold is not None:
-        multiple = sales / fee
-        if "sales_to_fee" in row:
-            reported = decimal(row["sales_to_fee"], f"{label}.sales_to_fee", errors)
+def check_derived(row, label, order_amount, fee, threshold, referrals, views, errors):
+    if order_amount is not None and fee is not None and threshold is not None:
+        multiple = order_amount / fee
+        if "order_amount_to_fee" in row:
+            reported = decimal(row["order_amount_to_fee"], f"{label}.order_amount_to_fee", errors)
             if reported is not None and abs(reported - multiple) > Decimal("0.000001"):
-                errors.append(f"{label}.sales_to_fee: disagrees with source values")
+                errors.append(f"{label}.order_amount_to_fee: disagrees with source values")
         if "target_met" in row and row["target_met"] is not (multiple > threshold):
             errors.append(f"{label}.target_met: must use strict greater-than threshold")
     if "referrals_per_view" in row and referrals is not None:
@@ -98,9 +98,31 @@ def validate(data):
             if not isinstance(row, dict):
                 errors.append(f"{row_label}: expected object")
                 continue
-            sales = decimal(row.get("affiliate_sales_usd"), f"{row_label}.affiliate_sales_usd", errors)
+            order_amount = decimal(row.get("order_amount_usd"), f"{row_label}.order_amount_usd", errors)
+            decimal(row.get("commissionable_volume_usd"), f"{row_label}.commissionable_volume_usd", errors)
             referrals = nonnegative_int(row.get("referrals"), f"{row_label}.referrals", errors)
-            nonnegative_int(row.get("orders"), f"{row_label}.orders", errors)
+            orders = nonnegative_int(row.get("orders"), f"{row_label}.orders", errors)
+            audit = row.get("order_audit")
+            if not isinstance(audit, dict):
+                errors.append(f"{row_label}.order_audit: expected object")
+            else:
+                audit_count = nonnegative_int(audit.get("order_count"), f"{row_label}.order_audit.order_count", errors)
+                unique_count = nonnegative_int(audit.get("unique_order_count"), f"{row_label}.order_audit.unique_order_count", errors)
+                duplicates = nonnegative_int(audit.get("duplicate_order_ids"), f"{row_label}.order_audit.duplicate_order_ids", errors)
+                mismatches = nonnegative_int(audit.get("detail_amount_mismatches"), f"{row_label}.order_audit.detail_amount_mismatches", errors)
+                list_amount = decimal(audit.get("list_order_amount_usd"), f"{row_label}.order_audit.list_order_amount_usd", errors)
+                if orders is not None and audit_count is not None and audit_count != orders:
+                    errors.append(f"{row_label}.order_audit.order_count: must equal orders")
+                if orders is not None and unique_count is not None and unique_count != orders:
+                    errors.append(f"{row_label}.order_audit.unique_order_count: must equal orders")
+                if duplicates is not None and duplicates != 0:
+                    errors.append(f"{row_label}.order_audit.duplicate_order_ids: must be zero")
+                if mismatches is not None and mismatches != 0:
+                    errors.append(f"{row_label}.order_audit.detail_amount_mismatches: must be zero")
+                if order_amount is not None and list_amount is not None and list_amount != order_amount:
+                    errors.append(f"{row_label}.order_audit.list_order_amount_usd: must equal order_amount_usd")
+                if audit.get("boundary_check_complete") is not True:
+                    errors.append(f"{row_label}.order_audit.boundary_check_complete: must be true")
             status = row.get("content_views_status")
             views = row.get("content_views")
             if status == "recorded":
@@ -110,21 +132,26 @@ def validate(data):
                     errors.append(f"{row_label}.content_views: must be null when not recorded")
             else:
                 errors.append(f"{row_label}.content_views_status: invalid status")
-            check_derived(row, row_label, sales, fee, threshold, referrals, views, errors)
+            check_derived(row, row_label, order_amount, fee, threshold, referrals, views, errors)
     return errors
 
 
 def self_test():
-    row = {"affiliate_sales_usd": 300, "referrals": 12, "orders": 2,
+    row = {"order_amount_usd": 300, "commissionable_volume_usd": 270,
+           "referrals": 12, "orders": 2,
+           "order_audit": {"order_count": 2, "unique_order_count": 2,
+                           "duplicate_order_ids": 0, "detail_amount_mismatches": 0,
+                           "list_order_amount_usd": 300, "boundary_check_complete": True},
            "content_views": 1000, "content_views_status": "recorded"}
     sample = {"threshold": 2.5, "months": ["2026-01"], "creators": [{
         "id": "creator-a", "name": "Creator A", "channel": "Channel A",
         "monthly_fee_usd": 100, "agreement_type": "new",
         "effective_date": "2026-01-01", "months": {"2026-01": row}}]}
     assert not validate(sample)
-    row.update({"sales_to_fee": 3, "target_met": True, "referrals_per_view": 0.012})
+    row.update({"order_amount_to_fee": 3, "target_met": True, "referrals_per_view": 0.012})
     assert not validate(sample)
-    row.update({"affiliate_sales_usd": 250, "sales_to_fee": 2.5, "target_met": False})
+    row.update({"order_amount_usd": 250, "order_amount_to_fee": 2.5, "target_met": False})
+    row["order_audit"]["list_order_amount_usd"] = 250
     assert not validate(sample)
     row["target_met"] = True
     assert validate(sample)
@@ -136,6 +163,12 @@ def self_test():
     assert validate(sample)
     row["referrals_per_view"] = None
     row["content_views_status"] = "not_updated"
+    assert validate(sample)
+    row["content_views"] = None
+    row["order_audit"]["duplicate_order_ids"] = 1
+    assert validate(sample)
+    row["order_audit"]["duplicate_order_ids"] = 0
+    row["order_audit"]["boundary_check_complete"] = False
     assert validate(sample)
     print("Self-test passed")
 

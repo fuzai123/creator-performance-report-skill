@@ -1,10 +1,13 @@
 # Creator Performance Report Skill
 
 A portable `SKILL.md` for source-backed affiliate and content-performance
-reporting. It contains **no source links, credentials, real creator data,
-fees, reports, or brand assets**. The user supplies access and inputs in their
-own environment; the agent reads source pages directly and does not download
-intermediate documents during a reporting or refresh run.
+reporting. Its workflow opens every affiliate order detail, separately sums
+`Order Amount` and `Commissionable Volume`, and evaluates the strict
+`Order Amount / monthly fee > 2.5` target. It contains **no source links,
+credentials, real creator data, fees, reports, or brand assets**. The user
+supplies access and inputs in their own environment; the agent reads source
+pages directly and does not download intermediate documents during a
+reporting or refresh run.
 
 ## Install
 
