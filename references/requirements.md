@@ -39,10 +39,15 @@ marketing recap. The user's current instructions and data take precedence.
    unless explicitly approved.
 8. For recurring updates, support separate schedules for affiliate/site data
    and content-view data, including weekly checks and every-other-Monday
-   checks where requested. Run in the agreed timezone. Read source pages
-   directly on every run, without intermediate downloads or exports. Validate
-   before writing, retain the prior publication on any failure, and disclose
-   local-login or cloud-access limitations accurately.
+   checks where requested. Run in the agreed timezone. Maintain a private
+   successful-publication checkpoint and keep validated creator-month history
+   locked. Read source pages directly only for newly completed months, newly
+   added creators' uncollected months, and fields previously marked missing or
+   not updated, without intermediate downloads or exports. Reopen a locked
+   historical month only for an explicit correction or backfill request.
+   Validate before writing, advance the checkpoint only after successful live
+   readback, retain the prior publication and checkpoint on any failure, and
+   disclose local-login or cloud-access limitations accurately.
 
 No actual roster, account names, fee amounts, links, metrics, brand files, or
 private report artifacts belong in this public skill.

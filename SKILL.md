@@ -96,13 +96,22 @@ For requested cadences, track each source independently: an affiliate/site
 check may be weekly while content-view checks may run every other Monday.
 Prefer a source connection and writer usable by the scheduled agent without
 the user present. Save a private runbook with source locations and mappings,
-not credentials. On each run, directly read the relevant latest completed
-period, compare with the last verified snapshot, and publish only when every
-required source and validation check succeeds. If anything fails or nothing
-changed, keep the previous version; do not make an empty commit or deployment.
-Report only meaningful changes, failures, or user actions needed. Respect the
-user's timezone and each source's chosen cadence. Scheduling itself does not
-prove a refresh.
+not credentials. Maintain a private incremental checkpoint of creator-months
+that were fully validated and successfully published. Treat those rows as
+immutable history: do not reopen source pages, recompute, or overwrite them on
+routine runs. Build each worklist from newly completed months, uncollected
+months for a newly added creator, and fields previously marked missing or not
+updated. Reprocess a locked historical month only when the user explicitly
+requests a correction or backfill.
+
+On each run, directly read only the worklist cells and order details, compare
+the additions with the last verified snapshot, and publish only when every
+required source and validation check succeeds. Advance the checkpoint only
+after the new publication is successfully read back. If anything fails or
+nothing changed, keep the previous version and checkpoint; do not make an empty
+commit or deployment. Report only meaningful changes, failures, or user actions
+needed. Respect the user's timezone and each source's chosen cadence.
+Scheduling itself does not prove a refresh.
 
 Before publishing this skill or any derivative publicly, run
 `python scripts/publication_audit.py <skill-directory>` and manually inspect
